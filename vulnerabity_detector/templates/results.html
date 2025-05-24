@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Results - {{ url }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="results-page-container">
+        <header class="results-main-header">
+            <h1>Scan Report</h1>
+            <p class="target-url">Target: <span>{{ url }}</span></p>
+            <p class="processing-time">Processing Time: {{ processing_time }} seconds</p>
+        </header>
+
+        <div class="results-grid">
+            <!-- General Information Section -->
+            <section class="result-section">
+                <h2 class="section-heading"><i class="fas fa-globe-americas icon"></i>General Information</h2>
+                <div class="info-grid">
+                    {% set gen_info_keys = ['Target URL', 'IP Address', 'Country', 'Region', 'City', 'Organisation', 'Error', 'Geo API Error'] %}
+                    {% for key in gen_info_keys %}
+                        {% if results[key] is defined and results[key] != "Unknown" and results[key] != "Resolution Error" %}
+                             {% if key == 'Error' and ('WHOIS' in results[key] or 'Geo API' in results[key]) %}{# Handled in specific sections #}
+                             {% elif key == 'Error' and results[key] == "Hosting info error: " %}{# Skip generic #}
+                             {% else %}
+                            <div class="info-item">
+                                <span class="info-label">{{ key }}:</span>
+                                <span class="info-value">{{ results[key] }}</span>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Domain Information Section -->
+            <section class="result-section">
+                <h2 class="section-heading"><i class="fas fa-calendar-alt icon"></i>Domain Information</h2>
+                <div class="info-grid">
+                    {% set domain_info_keys = ['Domain Creation Date', 'Domain Expiration Date', 'Domain Age', 'Expiration Status', 'Status', 'Error', 'WHOIS Error'] %}
+                     {% for key in domain_info_keys %}
+                        {% if results[key] is defined and results[key] != "Unknown" %}
+                             {% if key == 'Error' and 'WHOIS' not in results[key] and results[key] != "Domain info error:" %}{# Only show WHOIS or specific Domain errors #}
+                             {% elif key == 'Error' and results[key] == "Domain info error:" %}{# Skip generic #}
+                             {% else %}
+                            <div class="info-item">
+                                <span class="info-label">{{ "WHOIS Error" if key == "Error" else key }}:</span> {# Rename generic Error to WHOIS Error if applicable #}
+                                <span class="info-value">{{ results[key] }}</span>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <!-- Security Checks Section -->
+        <section class="result-section security-checks-section">
+            <h2 class="section-heading"><i class="fas fa-shield-alt icon"></i>Security Checks</h2>
+            <ul class="security-checks-list">
+                {% set exclude_keys = gen_info_keys + domain_info_keys + ['Scan Duration', 'Error', 'Status', 'WHOIS Error', 'Geo API Error'] %}
+                {% for key, value in results.items() %}
+                    {% if key not in exclude_keys %}
+                        {% set item_class = 'neutral' %} {# Default class #}
+                        {% if value is string %}
+                            {% if '✅' in value or 'Present' in value or 'Safe' in value or 'Good' in value %}
+                                {% set item_class = 'safe' %}
+                            {% elif '❌' in value or 'Detected!' in value or 'Vulnerable' in value or 'Missing' in value or 'Error' in value or 'found from the predefined list.❌' in value %}
+                                {% set item_class = 'danger' %}
+                            {% elif '⚠️' in value or 'Possible' in value or 'Potential' in value %}
+                                {% set item_class = 'warning' %}
+                            {% endif %}
+                        {% elif value is iterable and not value is string %}
+                            {% if key == 'Security Headers' and value %}
+                                {% set item_class = 'neutral' %} 
+                            {% elif value %} 
+                                {% set item_class = 'danger' %}
+                            {% endif %}
+                        {% endif %}
+
+                        <li class="check-item item-{{ item_class }}">
+                            <span class="check-key">{{ key }}</span>
+                            <span class="check-value">
+                                {% if key == 'Security Headers' %}
+                                    {% if value is string %}
+                                        {{ value }}
+                                    {% elif value is iterable and not value is string and value %}
+                                        <strong>Present:</strong> {{ value | join(', ') }}
+                                    {% elif value is iterable and not value is string and not value %}
+                                        No target security headers found from the predefined list.❌
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                {% else %}
+                                    {% if value is iterable and not value is string and value %}
+                                        Missing: {{ value | join(', ') }}
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                {% endif %}
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </section>
+        
+        <div class="report-actions">
+            <a href="{{ url_for('home') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> New Scan</a>
+            <a href="{{ url_for('download_pdf') }}" class="btn btn-pdf"><i class="fas fa-file-pdf"></i> PDF Report</a>
+            <a href="{{ url_for('download_csv') }}" class="btn btn-csv"><i class="fas fa-file-csv"></i> CSV Report</a>
+        </div>
+
+    </div>
+</body>
+</html>

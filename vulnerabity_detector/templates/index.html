@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeScan - Website Vulnerability Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- No Bootstrap needed here as progress bar is on progress.html -->
+</head>
+<body>
+    <div class="scanner-container">
+        <div class="scanner-card">
+            <div class="scanner-header">
+                <i class="fas fa-shield-alt scanner-icon"></i>
+                <h1 class="gradient-text">SafeScan</h1>
+                <p class="scanner-description">Enter a website URL to scan for security vulnerabilities.</p>
+                <p class="scanner-description">Your scan will start, and you'll be taken to a progress page.</p>
+            </div>
+            
+            <form id="scanForm" action="{{ url_for('scan') }}" method="POST" class="scanner-form">
+                <div class="input-group">
+                    <i class="fas fa-globe input-icon"></i>
+                    <input 
+                        type="text" 
+                        name="url" 
+                        class="url-input" 
+                        placeholder="e.g., https://example.com" 
+                        required
+                        pattern="^(http(s)?:\/\/)?([a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/.*)?)$"
+                        title="Please enter a valid URL (e.g., https://example.com or example.com)"
+                    >
+                </div>
+                <button type="submit" class="scan-btn">
+                    <i class="fas fa-search"></i> Start Security Scan
+                </button>
+            </form>
+
+            <div class="scanner-features">
+                <div class="feature">
+                    <i class="fas fa-lock"></i>
+                    <span>SSL/TLS Checks</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-bug"></i>
+                    <span>Injection Scans</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-user-secret"></i>
+                    <span>Header Analysis</span>
+                </div>
+                 <div class="feature">
+                    <i class="fas fa-server"></i>
+                    <span>Server Info</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <footer>
+        <p>© 2023 SafeScan. For educational and informational purposes only.</p>
+    </footer>
+
+    <script>
+
+        document.getElementById('scanForm').addEventListener('submit', function(e) {
+            const urlInput = this.querySelector('input[name="url"]');
+            if (urlInput && urlInput.value.trim() === "") {
+                e.preventDefault(); // Prevent submission
+                alert("URL cannot be empty.");
+                return;
+            }
+            if (urlInput && !urlInput.value.includes('.')) {
+                 // Allow submission for localhost/IP, but flag for common users
+                if (!urlInput.value.match(/^(localhost|(\d{1,3}\.){3}\d{1,3}(:\d+)?)$/i)) {
+                    if (!confirm("The URL doesn't seem to contain a valid domain extension (e.g., .com, .org). Proceed anyway?")) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            }
+            // Indicate processing to the user before redirect
+            const submitButton = this.querySelector('.scan-btn');
+            if (submitButton) {
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting Scan...';
+                submitButton.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

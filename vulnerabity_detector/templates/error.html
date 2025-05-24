@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Error</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="results-container" style="text-align: center; margin-top: 50px;">
+        <h2 class="results-header" style="color: #ff6347;">⚠️ An Error Occurred</h2>
+        {% if url %}
+            <p class="text-light">During scan for: <strong class="gradient-text">{{ url }}</strong></p>
+        {% endif %}
+        <div class="list-group" style="margin-top: 20px; background-color: rgba(255,0,0,0.1); border: 1px solid #ff6347; padding: 20px; border-radius: 10px;">
+            <p class="text-light" style="font-size: 1.1em;">{{ error_message }}</p>
+        </div>
+        <hr style="margin-top: 30px; margin-bottom: 30px;">
+        <div class="text-center">
+            <a href="{{ url_for('home') }}" class="btn back-btn">🔙 Try a New Scan</a>
+        </div>
+    </div>
+</body>
+</html>
